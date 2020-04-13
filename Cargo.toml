@@ -1,0 +1,10 @@
+[package]
+name = "mia_rust"
+version = "0.1.0"
+authors = ["Anandpskerala <anandps002@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+tbot = "0.5"
+tokio = { version = "0.2", features = ["macros"] }
+
