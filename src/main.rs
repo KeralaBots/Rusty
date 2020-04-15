@@ -12,7 +12,12 @@ const KEYBOARD: &[&[Button]] = &[
         Button::new("Group", ButtonKind::Url(GROUP)),
         Button::new("Developer", ButtonKind::Url(DEV)),
     ],
+    &[
+        Button::new("Help!", ButtonKind::CallbackData("help")
+    )],
+
 ];
+
 
 
 #[tokio::main]
@@ -30,6 +35,28 @@ async fn main() {
     bot.command("help", |context| async move {
         let call_result = context.send_message_in_reply("No-one gonna help u").call().await;
 
+        if let Err(err) = call_result {
+            dbg!(err);
+        }
+    });
+
+    // Testing a sample text handler
+    bot.text(|context| async move {
+        if &context.text.value=="Hello" {
+            let call_result = context.send_message_in_reply("Hello Buddy").call().await;
+            if let Err(err) = call_result {
+                dbg!(err);
+            }
+        }
+    });
+
+    // Callback handler
+    bot.data_callback(|context| async move {
+        let message = match context.data.as_str() {
+            "help" => "No one gonna help u 😁😁😁!",
+            _ => "Are you trying to hack me?",
+        };
+        let call_result = context.notify(message).call().await;
         if let Err(err) = call_result {
             dbg!(err);
         }
