@@ -1,1 +1,1 @@
-worker: ./target/release/mia_rust
+worker: ./target/release/rusty
