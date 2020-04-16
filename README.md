@@ -26,12 +26,8 @@ async fn main() {
     // Change the BOT_TOKEN with your Bot token from @BotFather
 ```
 
-## Contribution
+## Contributions
 
-Feel free to contribute. Contribution are always welcome.<br>
+Feel free to contribute. Contributions are always welcome. 
 
-<br>
-
-[💖 Kerala Developer Team](https://t.me/keralasbots)
-
-
+With <b>[💖 Kerala Developer Team](https://t.me/Keralasbots)</b>
