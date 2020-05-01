@@ -8,26 +8,33 @@ The rewritten form of Mia into `Rust` for better performance.
 ```
 
 [dependencies]
-tbot = "0.5"
-tokio = { version = "0.2", features = ["macros"] }
-
+teloxide = "0.2.0"
+futures = "0.3.4"
+tokio = "0.2.13"
+log = "0.4.8"
+pretty_env_logger = "0.4.0"
+lazy_static = "1.4.0"
+dotenv = "0.15.0"
 
 ```
 
 ## Installation:
 
-Change the following from the [Main File](src/main.rs)
+Create file named `.env` or rename `.env.sample` to `.env` and change the following
 
 ```
 
-#[tokio::main]
-async fn main() {
-    let mut bot = Bot::new("BOT_TOKEN".to_string()).event_loop();
-    // Change the BOT_TOKEN with your Bot token from @BotFather
+TELOXIDE_TOKEN=123456890:ABCDEFGHIKLMN-OPQRS
+
 ```
 
-## Contributions
 
-Feel free to contribute. Contributions are always welcome. 
+## Contribution
 
-With <b>[💖 Kerala Developer Team](https://t.me/Keralasbots)</b>
+Feel free to contribute. Contribution are always welcome.<br>
+
+<br>
+
+[💖 Kerala Developer Team](https://t.me/keralasbots)
+
+
