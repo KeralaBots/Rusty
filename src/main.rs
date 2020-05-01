@@ -1,66 +1,82 @@
-use tbot::{
-    prelude::*,
-    types::keyboard::inline::{Button, ButtonKind},
-    Bot 
-};
+use std::env;
 
-const GROUP: &str = "https://t.me/Keralasbots";
-const DEV: &str = "https://t.me/Anandpskerala";
+use teloxide::{prelude::*, utils::command::BotCommand};
+use dotenv::dotenv;
 
-const KEYBOARD: &[&[Button]] = &[
-    &[
-        Button::new("Group", ButtonKind::Url(GROUP)),
-        Button::new("Developer", ButtonKind::Url(DEV)),
-    ],
-    &[
-        Button::new("Help!", ButtonKind::CallbackData("help")
-    )],
+use admin::{mute_user, kick_user, ban_user};
 
-];
+mod admin;
 
-
+#[derive(BotCommand)]
+#[command(rename = "lowercase", description = "These are the supported commands:\n")]
+enum Command {
+    #[command(description = "To check I am Alive :)")]
+    Start,
+    #[command(description = "Display the help text")]
+    Help,
+    #[command(description = "Kicks a user from chat.")]
+    Kick,
+    #[command(description = "Bans a user in the chat.")]
+    Ban,
+    #[command(description = "Mutes user in the chat.")]
+    Mute,
+}
 
 #[tokio::main]
 async fn main() {
-    let mut bot = Bot::new("BOT_TOKEN".to_string()).event_loop();
-    println!("Successfully logined as bot");
+    run().await;
+}
 
-    bot.command("start", |context| async move {
-        let call_result = context.send_message_in_reply("Hi, I am Rusty. I am bot written in Rust language for @KeralasBots.").reply_markup(KEYBOARD).call().await;
-        if let Err(err) = call_result {
-            dbg!(err);
+
+async fn action(
+    cx: &DispatcherHandlerCx<Message>,
+    command: &Command,
+    args: &[String],
+) -> ResponseResult<()> {
+    match command {
+        Command::Help => {
+            cx.answer(Command::descriptions())
+                .reply_to_message_id(cx.update.id)
+                .send()
+                .await?;
         }
-    });
-
-    bot.command("help", |context| async move {
-        let call_result = context.send_message_in_reply("No-one gonna help u").call().await;
-
-        if let Err(err) = call_result {
-            dbg!(err);
+        Command::Start => {
+            cx.answer("Hi there! I'm Rusty written in Rust.\n\nFor help click /help")
+                .reply_to_message_id(cx.update.id)
+                .send()
+                .await?;
         }
-    });
-
-    // Testing a sample text handler
-    bot.text(|context| async move {
-        if &context.text.value=="Hello" {
-            let call_result = context.send_message_in_reply("Hello Buddy").call().await;
-            if let Err(err) = call_result {
-                dbg!(err);
-            }
+        Command::Kick => {
+            kick_user(cx).await?;
         }
-    });
-
-    // Callback handler
-    bot.data_callback(|context| async move {
-        let message = match context.data.as_str() {
-            "help" => "No one gonna help u 😁😁😁!",
-            _ => "Are you trying to hack me?",
-        };
-        let call_result = context.notify(message).call().await;
-        if let Err(err) = call_result {
-            dbg!(err);
+        Command::Ban => {
+            ban_user(cx, args).await?;
         }
-    });
+        Command::Mute => {
+            mute_user(cx, args).await?;
+        }
+    };
 
-    bot.polling().start().await.unwrap();
+    Ok(())
+}
+
+async fn run() {
+    dotenv().ok();
+    teloxide::enable_logging!();
+    log::info!("Starting Rusty");
+
+    let bot = Bot::from_env();
+
+    Dispatcher::new(bot)
+        .messages_handler(command_handler)
+        .dispatch()
+        .await;
+}
+
+async fn command_handler(rx: DispatcherHandlerRx<Message>) {
+    rx.commands::<Command, &str>("Master_Rustybot")
+        .for_each_concurrent(None, |(cx, command, args)| async move {
+            action(&cx, &command, &args).await.log_on_error().await
+        })
+        .await;
 }
