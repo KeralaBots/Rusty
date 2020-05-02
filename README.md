@@ -27,6 +27,15 @@ Create file named `.env` or rename `.env.sample` to `.env` and change the follow
 TELOXIDE_TOKEN=123456890:ABCDEFGHIKLMN-OPQRS
 
 ```
+More support will soon added.
+
+## Older Version
+
+Older version of Rusty was based on <code>[SnejUgal's](https://gitlab.com/SnejUgal)</code> **[tbot](https://tbot.rs/)**.
+
+Now it is based on <code><b>[teloxide](https://github.com/teloxide/teloxide)<b></code>.
+
+Thanks @AtechnoHazard for his rust-sample bot
 
 
 ## Contribution
@@ -35,6 +44,6 @@ Feel free to contribute. Contribution are always welcome.<br>
 
 <br>
 
-[💖 Kerala Developer Team](https://t.me/keralasbots)
+<B>[💖 Kerala Developer Team](https://t.me/keralasbots)<B>
 
 
