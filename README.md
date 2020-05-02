@@ -33,7 +33,7 @@ More support will soon added.
 
 Older version of Rusty was based on <code>[SnejUgal's](https://gitlab.com/SnejUgal)</code> **[tbot](https://tbot.rs/)**.
 
-Now it is based on <code><b>[teloxide](https://github.com/teloxide/teloxide)<b></code>.
+Now it is based on <code><b>[teloxide](https://github.com/teloxide/teloxide)</b></code>.
 
 Thanks [@AtechnoHazard](https://t.me/AtechnoHazard) for his rust-sample bot
 
