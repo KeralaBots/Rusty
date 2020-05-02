@@ -35,7 +35,7 @@ Older version of Rusty was based on <code>[SnejUgal's](https://gitlab.com/SnejUg
 
 Now it is based on <code><b>[teloxide](https://github.com/teloxide/teloxide)<b></code>.
 
-Thanks @AtechnoHazard for his rust-sample bot
+Thanks [@AtechnoHazard](https://t.me/AtechnoHazard) for his rust-sample bot
 
 
 ## Contribution
@@ -44,6 +44,6 @@ Feel free to contribute. Contribution are always welcome.<br>
 
 <br>
 
-<B>[💖 Kerala Developer Team](https://t.me/keralasbots)<B>
+<B>[💖 Kerala Developer Team](https://t.me/keralasbots)</B>
 
 
