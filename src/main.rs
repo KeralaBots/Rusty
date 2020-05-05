@@ -74,7 +74,9 @@ async fn run() {
 }
 
 async fn command_handler(rx: DispatcherHandlerRx<Message>) {
-    rx.commands::<Command, &str>("Master_Rustybot")
+    let bot_name = env::var("BOT_NAME").expect("BOT_NAME variable missing.");
+
+    rx.commands::<Command, &str>(&bot_name)
         .for_each_concurrent(None, |(cx, command, args)| async move {
             action(&cx, &command, &args).await.log_on_error().await
         })
