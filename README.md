@@ -25,6 +25,7 @@ Create file named `.env` or rename `.env.sample` to `.env` and change the follow
 ```
 
 TELOXIDE_TOKEN=123456890:ABCDEFGHIKLMN-OPQRS
+BOT_NAME=BOT'S_NAME
 
 ```
 More support will soon added.
