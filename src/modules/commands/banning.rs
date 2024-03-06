@@ -13,7 +13,6 @@ pub async fn kick(b: &Bot, m: &Message) -> ResponseResult<()> {
         return Ok(());
     }
 
-
     let (user_id, reason) = extract_user_and_text(b, m).await;
     if user_id.is_some() {
         let user = match b.get_chat_member(m.chat.id, user_id.unwrap()).await {

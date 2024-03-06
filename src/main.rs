@@ -3,7 +3,7 @@ use dotenv::dotenv;
 use teloxide::{
     dptree, prelude::*,
     types::ChatAction,
-    utils::command::BotCommands
+    utils::command::{self, BotCommands}
 };
 use lazy_static::lazy_static;
 
@@ -49,6 +49,12 @@ enum Commands {
     Help,
     #[command(description = "Kicks a user from the chat")]
     Kick,
+    #[command(description = "Pins a message in the chat")]
+    Pin,
+    #[command(description = "Upins a message in the chat")]
+    Unpin,
+    #[command(description = "Unpins all the messages in the chat")]
+    Unpinall,
 }
 
 #[allow(unused)]
@@ -66,9 +72,7 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
     let cmd = Commands::parse(text.unwrap(), &username).ok();
     if cmd.is_some() {
         match cmd.unwrap() {
-            Commands::Start => {
-                modules::commands::start_msg::start_msg(&b, &m).await?;
-            },
+            Commands::Start => modules::commands::start_msg::start_msg(&b, &m).await?,
             Commands::Help => {
                 let data = vec!["start", "help_msg"];
                 b.send_chat_action(m.chat.id, ChatAction::Typing);
@@ -76,9 +80,10 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
                     .reply_markup(utils::make_help_keyboard(data))
                     .await;
             },
-            Commands::Kick => {
-                modules::commands::banning::kick(&b, &m).await?;
-            }
+            Commands::Kick => modules::commands::banning::kick(&b, &m).await?,
+            Commands::Pin => modules::commands::admins::pin_msg(&b, &m).await?,
+            Commands::Unpin => modules::commands::admins::unpin_msg(&b, &m).await?,
+            Commands::Unpinall => modules::commands::admins::unpin_all_msg(&b, &m).await?,
         }
     }
     Ok(())
