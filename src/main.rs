@@ -5,10 +5,14 @@ use teloxide::{
     types::ChatAction,
     utils::command::BotCommands
 };
+use lazy_static::lazy_static;
 
 pub mod modules;
 pub mod utils;
 
+lazy_static!(
+    static ref BOT_ID: u64 = env::var("BOT_ID").expect("failed to load BOT_ID").parse::<u64>().expect("failed to parse BOT_ID");
+);
 
 #[tokio::main]
 async fn main() {
@@ -73,7 +77,7 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
                     .await;
             },
             Commands::Kick => {
-                modules::commands::admins::kick(&b, &m).await?;
+                modules::commands::banning::kick(&b, &m).await?;
             }
         }
     }

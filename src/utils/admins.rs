@@ -1,4 +1,6 @@
-use teloxide::{prelude::*, types::{ChatMemberStatus, Message}};
+use teloxide::{prelude::*, types::{ChatMember, ChatMemberStatus, Message}};
+
+use crate::BOT_ID;
 
 
 #[allow(unused)]
@@ -14,18 +16,12 @@ pub async fn is_group(b: &Bot, m: &Message) -> bool {
 
 #[allow(unused)]
 pub async fn require_admin(b: &Bot, m: &Message) -> bool {
-    let user = b.get_chat_member(m.chat.id, m.from().unwrap().id).await.unwrap();
-    
-    let res = match user.status() {
-        ChatMemberStatus::Administrator => true,
-        ChatMemberStatus::Owner => true,
-        _ => {
-            b.send_message(m.chat.id, "You don't have the permission to use this command")
-                .reply_to_message_id(m.id).send().await;
-            false
-        }
-    };
-    res
+    let users = b.get_chat_administrators(m.chat.id).await.unwrap();
+    let user = users.iter().filter(|u| u.user.id == m.from().unwrap().id || u.user.id == UserId(*BOT_ID)).collect::<Vec<&ChatMember>>();
+    if user.len() > 1 {
+        return true;
+    }
+    return false;
 }
 
 #[allow(unused)]
@@ -41,26 +37,9 @@ pub async fn is_user_admin(b: &Bot, m: &Message, userid: UserId) -> bool {
 }
 
 #[allow(unused)]
-pub async fn is_bot_admin(b: &Bot, m: &Message) -> bool {
-    let me = b.get_me().await.unwrap();
-    let user = b.get_chat_member(m.chat.id, me.id).await.unwrap();
-    
-    let res = match user.status() {
-        ChatMemberStatus::Administrator => true,
-        ChatMemberStatus::Owner => true,
-        _ => {
-            b.send_message(m.chat.id, "I am not an admin of this group")
-                .reply_to_message_id(m.id).send().await;
-            false
-        }
-    };
-    res
-}
-
-#[allow(unused)]
 pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<UserId>, Option<&'a str>) {
     if let Some(msg_text) = m.text() {
-        let split_text: Vec<&str> = msg_text.splitn(2, char::is_whitespace).collect();
+        let split_text: Vec<&str> = msg_text.splitn(3, char::is_whitespace).collect();
         if m.reply_to_message().is_some() {
             let user_id = m.reply_to_message().unwrap().from().unwrap().id;
             if split_text.len() > 1 {
@@ -70,6 +49,10 @@ pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<Us
             }
         } else {
             if split_text.len() == 1 {
+                b.send_message(m.chat.id, "Try refering to user dude.")
+                    .reply_to_message_id(m.id)
+                    .send()
+                    .await;
                 return (None, None);
             }
             let user_id = match split_text[1].parse::<u64>() {
