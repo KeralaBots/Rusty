@@ -3,7 +3,7 @@ use dotenv::dotenv;
 use teloxide::{
     dptree, prelude::*,
     types::ChatAction,
-    utils::command::{self, BotCommands}
+    utils::command::BotCommands
 };
 use lazy_static::lazy_static;
 
@@ -17,11 +17,29 @@ lazy_static!(
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    run().await;
+    setup_logger().ok();
+    run().await.ok();
 }
 
 
-async fn run() {
+fn setup_logger() -> Result<(), fern::InitError> {
+    fern::Dispatch::new()
+        .format(| out, message, record | {
+            out.finish(
+                format_args!("[{}] - {} - {}",
+                record.level(),
+                record.target(),
+                message)
+            )
+        })
+        .level(log::LevelFilter::Debug)
+        .chain(std::io::stdout())
+        .apply()?;
+    Ok(())
+}
+
+
+async fn run() -> ResponseResult<()>{
     let bot_token = match env::var("BOT_TOKEN") {
         Ok(bot_token) => bot_token,
         Err(err) => panic!("failed to load token from env: {:#}", err)
@@ -31,13 +49,15 @@ async fn run() {
     let handler = dptree::entry()
         .branch(Update::filter_message().endpoint(handle_messages));
 
-    println!("Staring Bot");
+    log::info!("Starting Rusty");
 
     Dispatcher::builder(bot, handler)
         .enable_ctrlc_handler()
         .build()
         .dispatch()
         .await;
+    log::info!("Shutting down Rusty");
+    Ok(())
 }
 
 #[derive(BotCommands, Clone)]
@@ -49,6 +69,12 @@ enum Commands {
     Help,
     #[command(description = "Kicks a user from the chat")]
     Kick,
+    #[command(description = "Bans a user from the chat")]
+    Ban,
+    #[command(description = "Unbans a user in the group")]
+    Unban,
+    #[command(description = "Temporarily bans a user from the chat")]
+    Tban,
     #[command(description = "Pins a message in the chat")]
     Pin,
     #[command(description = "Upins a message in the chat")]
@@ -81,6 +107,9 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
                     .await;
             },
             Commands::Kick => modules::commands::banning::kick(&b, &m).await?,
+            Commands::Ban => modules::commands::banning::ban_user(&b, &m).await?,
+            Commands::Unban => modules::commands::banning::unban_user(&b, &m).await?,
+            Commands::Tban => modules::commands::banning::temp_ban(&b, &m).await?,
             Commands::Pin => modules::commands::admins::pin_msg(&b, &m).await?,
             Commands::Unpin => modules::commands::admins::unpin_msg(&b, &m).await?,
             Commands::Unpinall => modules::commands::admins::unpin_all_msg(&b, &m).await?,

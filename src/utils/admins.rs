@@ -1,3 +1,4 @@
+use chrono::{DateTime, Duration, Utc};
 use teloxide::{prelude::*, types::{ChatMember, ChatMemberStatus, Message}};
 
 use crate::BOT_ID;
@@ -39,8 +40,8 @@ pub async fn is_user_admin(b: &Bot, m: &Message, userid: UserId) -> bool {
 #[allow(unused)]
 pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<UserId>, Option<&'a str>) {
     if let Some(msg_text) = m.text() {
-        let split_text: Vec<&str> = msg_text.splitn(3, char::is_whitespace).collect();
         if m.reply_to_message().is_some() {
+            let split_text: Vec<&str> = msg_text.splitn(2, char::is_whitespace).collect();
             let user_id = m.reply_to_message().unwrap().from().unwrap().id;
             if split_text.len() > 1 {
                 return (Some(user_id), Some(split_text[1]));
@@ -48,8 +49,9 @@ pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<Us
                 return (Some(user_id), None);
             }
         } else {
+            let split_text: Vec<&str> = msg_text.splitn(3, char::is_whitespace).collect();
             if split_text.len() == 1 {
-                b.send_message(m.chat.id, "Try refering to user dude.")
+                b.send_message(m.chat.id, "Try refering to a user dude.")
                     .reply_to_message_id(m.id)
                     .send()
                     .await;
@@ -74,4 +76,27 @@ pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<Us
         }
     }
     return (None, None);
+}
+
+pub fn extract_time(time_val: &str) -> Option<DateTime<Utc>> {
+    let current_time = Utc::now();
+    if time_val.ends_with(&['s', 'm', 'h', 'd']) {
+        let unit = time_val.chars().last().unwrap();
+        let time_num = match time_val[..time_val.len() - 1].parse::<i64>() {
+            Ok(t) => t,
+            Err(_) => {
+                return None;
+            }
+        };
+
+        match unit {
+            's' => Some(current_time + Duration::try_seconds(time_num).unwrap()),
+            'm' => Some(current_time + Duration::try_minutes(time_num).unwrap()),
+            'h' => Some(current_time + Duration::try_hours(time_num).unwrap()),
+            'd' => Some(current_time + Duration::try_days(time_num).unwrap()),
+            _ => None
+        }
+    } else {
+        return None;
+    }
 }
