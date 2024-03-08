@@ -1,5 +1,5 @@
 use chrono::{DateTime, Duration, Utc};
-use teloxide::{prelude::*, types::{ChatMember, ChatMemberStatus, Message}};
+use teloxide::{prelude::*, types::Message};
 
 use crate::BOT_ID;
 
@@ -17,25 +17,58 @@ pub async fn is_group(b: &Bot, m: &Message) -> bool {
 
 #[allow(unused)]
 pub async fn require_admin(b: &Bot, m: &Message) -> bool {
-    let users = b.get_chat_administrators(m.chat.id).await.unwrap();
-    let user = users.iter().filter(|u| u.user.id == m.from().unwrap().id || u.user.id == UserId(*BOT_ID)).collect::<Vec<&ChatMember>>();
-    if user.len() > 1 {
-        return true;
+    let admins = match b.get_chat_administrators(m.chat.id).await {
+        Ok(m) => m,
+        Err(_) => {
+            return false;
+        },
+    };
+
+    let mut req_admins: Vec<UserId> = Vec::new();
+    for admn in &admins {
+        if admn.user.id == m.from().unwrap().id {
+            req_admins.push(admn.user.id);
+        }
+
+        if admn.user.id == UserId(*BOT_ID) {
+            req_admins.push(admn.user.id);
+        }
     }
-    return false;
+
+    if !req_admins.contains(&m.from().unwrap().id) {
+        b.send_message(m.chat.id, "You are not an admin of the group")
+            .reply_to_message_id(m.id)
+            .send()
+            .await;
+        return false;
+    }
+
+    if !req_admins.contains(&UserId(*BOT_ID)) {
+        b.send_message(m.chat.id, "I am not an admin of the group")
+            .reply_to_message_id(m.id)
+            .send()
+            .await;
+        return false;
+    }
+    return true;
 }
 
+/* 
 #[allow(unused)]
 pub async fn is_user_admin(b: &Bot, m: &Message, userid: UserId) -> bool {
-    let user = b.get_chat_member(m.chat.id, userid).await.unwrap();
-    
-    let res = match user.status() {
-        ChatMemberStatus::Administrator => true,
-        ChatMemberStatus::Owner => true,
-        _ => false,
-    };
-    res
+    match b.get_chat_administrators(m.chat.id).await {
+        Ok(u) => {
+            match u.iter() {
+                Ok(m) => m,
+                Err(_) => todo!(),
+            }
+        },
+        Err(_) => {
+            return false;
+        }
+    }
 }
+*/
 
 #[allow(unused)]
 pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<UserId>, Option<&'a str>) {
