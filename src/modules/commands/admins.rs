@@ -1,4 +1,4 @@
-use teloxide::prelude::*;
+use teloxide::{prelude::*, types::ParseMode};
 use crate::utils::admins::{is_group, require_admin};
 
 #[allow(unused)]
@@ -18,7 +18,28 @@ pub async fn pin_msg(b: &Bot, m: &Message) -> ResponseResult<()> {
             .await;
         return Ok(());
     } else {
-        b.pin_chat_message(m.chat.id, m.reply_to_message().unwrap().id).await;
+        let split_msg: Vec<&str> = m.text().unwrap().splitn(2, char::is_whitespace).collect();
+        let silent_pin: bool;
+        if split_msg.len() > 1 {
+            if split_msg[1] == "loud" {
+                silent_pin = false;
+            } else if split_msg[1] == "silent" {
+                silent_pin = true;
+            } else {
+                b.send_message(m.chat.id, "I can only understand `loud/silent`")
+                    .reply_to_message_id(m.id)
+                    .parse_mode(ParseMode::MarkdownV2)
+                    .send()
+                    .await;
+                return Ok(());
+            }
+        } else {
+            silent_pin = false;
+        }
+        b.pin_chat_message(m.chat.id, m.reply_to_message().unwrap().id)
+            .disable_notification(silent_pin)
+            .send()
+            .await;
         b.delete_message(m.chat.id, m.id).await;
     }
     Ok(())

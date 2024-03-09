@@ -2,7 +2,6 @@ use std::env;
 use dotenv::dotenv;
 use teloxide::{
     dptree, prelude::*,
-    types::ChatAction,
     utils::command::BotCommands
 };
 use lazy_static::lazy_static;
@@ -99,13 +98,7 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
     if cmd.is_some() {
         match cmd.unwrap() {
             Commands::Start => modules::commands::start_msg::start_msg(&b, &m).await?,
-            Commands::Help => {
-                let data = vec!["start", "help_msg"];
-                b.send_chat_action(m.chat.id, ChatAction::Typing);
-                b.send_message(m.chat.id, Commands::descriptions().to_string())
-                    .reply_markup(utils::make_help_keyboard(data))
-                    .await;
-            },
+            Commands::Help => modules::commands::help_msg::help_msg(&b, &m).await?,
             Commands::Kick => modules::commands::banning::kick(&b, &m).await?,
             Commands::Ban => modules::commands::banning::ban_user(&b, &m).await?,
             Commands::Unban => modules::commands::banning::unban_user(&b, &m).await?,

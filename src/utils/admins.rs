@@ -1,5 +1,5 @@
 use chrono::{DateTime, Duration, Utc};
-use teloxide::{prelude::*, types::Message};
+use teloxide::{prelude::*, types::{ChatMemberStatus, Message, User}};
 
 use crate::BOT_ID;
 
@@ -53,22 +53,54 @@ pub async fn require_admin(b: &Bot, m: &Message) -> bool {
     return true;
 }
 
-/* 
+
 #[allow(unused)]
-pub async fn is_user_admin(b: &Bot, m: &Message, userid: UserId) -> bool {
-    match b.get_chat_administrators(m.chat.id).await {
-        Ok(u) => {
-            match u.iter() {
-                Ok(m) => m,
-                Err(_) => todo!(),
+pub async fn is_user_admin(b: &Bot, m: &Message, user_id: UserId, action: Option<&str>) -> Option<User>{
+    match b.get_chat_member(m.chat.id, user_id).await {
+        Ok(user) => {
+            if user.user.id == UserId(*BOT_ID) {
+                b.send_message(m.chat.id, "Yo! U can't do this to me")
+                        .reply_to_message_id(m.id)
+                        .send()
+                        .await;
+                return None;
+            }
+            match user.status() {
+                ChatMemberStatus::Administrator | ChatMemberStatus::Owner => {
+                    let reply_text: String;
+                    if action.is_some() {
+                        reply_text = format!("Yo! I can't {} an admin", action.unwrap());
+                    } else {
+                        reply_text = "Yo! You can't do this".to_string();
+                    }
+                    b.send_message(m.chat.id, reply_text)
+                        .reply_to_message_id(m.id)
+                        .send()
+                        .await;
+                    return None;
+                },
+                ChatMemberStatus::Banned | ChatMemberStatus::Left | ChatMemberStatus::Restricted => {
+                    b.send_message(m.chat.id, "this user is ded mate")
+                        .reply_to_message_id(m.id)
+                        .send()
+                        .await;
+                    return None;
+                },
+                _ => {
+                    return Some(user.user);
+                }
             }
         },
         Err(_) => {
-            return false;
-        }
-    }
+            b.send_message(m.chat.id, "User not found")
+                    .reply_to_message_id(m.id)
+                    .send()
+                    .await;
+            return None;
+        },
+    };
+    return None;
 }
-*/
 
 #[allow(unused)]
 pub async fn extract_user_and_text<'a>(b: &'a Bot, m: &'a Message) -> (Option<UserId>, Option<&'a str>) {

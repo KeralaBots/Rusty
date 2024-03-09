@@ -2,6 +2,10 @@ pub mod admins;
 
 use teloxide::types::{InlineKeyboardMarkup, InlineKeyboardButton};
 
+const SPECIAL_CHARS: &[char] = &[
+    '\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<', '&', '#', '+', '-', '=', '|', '{', '}', '.', '!',
+];
+
 pub fn make_help_keyboard(datas: Vec<&str>) -> InlineKeyboardMarkup {
     let mut keyboard_buttons: Vec<Vec<InlineKeyboardButton>> = vec![];
 
@@ -34,4 +38,16 @@ pub fn pascal_case(s: &str) -> String {
     }
 
     pascal_case
+}
+
+pub fn escape_markdown(data: &str) -> String {
+    let mut return_data = String::new();
+    for c in data.chars() {
+        if SPECIAL_CHARS.contains(&c) {
+            return_data.push('\\');
+        }
+        return_data.push(c)
+    }
+
+    return return_data;
 }
