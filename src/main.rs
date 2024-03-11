@@ -1,8 +1,7 @@
 use std::env;
 use dotenv::dotenv;
 use teloxide::{
-    dptree, prelude::*,
-    utils::command::BotCommands
+    dptree, prelude::*, types::ParseMode, utils::command::BotCommands
 };
 use lazy_static::lazy_static;
 
@@ -37,8 +36,7 @@ fn setup_logger() -> Result<(), fern::InitError> {
     Ok(())
 }
 
-
-async fn run() -> ResponseResult<()>{
+async fn run() -> ResponseResult<()> {
     let bot_token = match env::var("BOT_TOKEN") {
         Ok(bot_token) => bot_token,
         Err(err) => panic!("failed to load token from env: {:#}", err)
@@ -46,7 +44,9 @@ async fn run() -> ResponseResult<()>{
 
     let bot = Bot::new(bot_token);
     let handler = dptree::entry()
-        .branch(Update::filter_message().endpoint(handle_messages));
+        .branch(Update::filter_callback_query().endpoint(handle_callback))
+        .branch(Update::filter_message().endpoint(handle_messages)
+    );
 
     log::info!("Starting Rusty");
 
@@ -80,6 +80,10 @@ enum Commands {
     Unpin,
     #[command(description = "Unpins all the messages in the chat")]
     Unpinall,
+    #[command(description = "Gets the id of the chat/user")]
+    Id,
+    #[command(description = "Gets the info of the user")]
+    Info,
 }
 
 #[allow(unused)]
@@ -91,7 +95,7 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
 
     let username = match env::var("BOT_USERNAME") {
         Ok(s) => s,
-        Err(err) => panic!("failed to load var from env: {}", err)
+        Err(err) => panic!("failed to load username from env: {}", err)
     };
 
     let cmd = Commands::parse(text.unwrap(), &username).ok();
@@ -106,7 +110,35 @@ async fn handle_messages(b: Bot, m: Message) -> ResponseResult<()> {
             Commands::Pin => modules::commands::admins::pin_msg(&b, &m).await?,
             Commands::Unpin => modules::commands::admins::unpin_msg(&b, &m).await?,
             Commands::Unpinall => modules::commands::admins::unpin_all_msg(&b, &m).await?,
+            Commands::Id => modules::commands::misc::get_user_id(&b, &m).await?,
+            Commands::Info => modules::commands::misc::get_user_info(&b, &m).await?,
         }
+    }
+    Ok(())
+}
+
+#[allow(unused)]
+async fn handle_callback(b: Bot, m: CallbackQuery) -> ResponseResult<()> {
+    let opt_data = m.data;
+    if opt_data.is_none() {
+        return Ok(());
+    }
+    let data = opt_data.unwrap();
+    let message = m.message.clone().unwrap();
+    b.answer_callback_query(m.id).await;
+    if data.starts_with("help") {
+        let split_data = data.splitn(2, "_").collect::<Vec<&str>>();
+        if split_data.len() > 1 {
+            let reply_text = match split_data[1] {
+                "admins" => modules::callbacks::help_msg::ADMINS.to_owned(),
+                &_ => todo!()
+            };
+            b.edit_message_text(message.chat.id, message.id, reply_text)
+                .parse_mode(ParseMode::MarkdownV2)
+                .send()
+                .await;
+        }
+        
     }
     Ok(())
 }
